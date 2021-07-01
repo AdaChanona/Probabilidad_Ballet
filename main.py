@@ -1,7 +1,8 @@
-from itertools import permutations
+from itertools import count, permutations
 import random
 import matplotlib.pyplot as plt
 import numpy as np
+from numpy.lib.function_base import append
 import pandas as pd
 import tkinter as tk
 from tkinter import Text
@@ -56,14 +57,13 @@ def practica_ballet():
             pasos.append(pasos_ballet[0])
         else:
             pasos.append(pasos_ballet[1])
-    df_pos=pd.DataFrame(posiciones_ballet,columns=['POSICIONES'])
-    df_pasos=pd.DataFrame(pasos,columns=['PASOS'])
+    df_pos=pd.DataFrame(posiciones_ballet,columns=['FASE 1 POSICIONES'])
+    df_pasos=pd.DataFrame(pasos,columns=['FASE 2 PASOS'])
     df_ballet=pd.concat([df_pos,df_pasos],axis=1)
     return df_ballet
         
-
 def probabilidad_clasica(df_ballet):
-    pasos=np.array(df_ballet['PASOS'])
+    pasos=np.array(df_ballet['FASE 2 PASOS'])
     cont_ret=0
     cont_rel=0
     for i in range(len(pasos)):
@@ -85,6 +85,29 @@ def mostrar_grafica(df1,frecuencia):
     grafBarra=plt.bar(df1['Configuraciones'],frecuencia)
     plt.show()
 
+def probabilidad_subjetiva(df_ballet):
+    pasos=np.array(df_ballet['FASE 2 PASOS'])
+    prob_posiciones=[]
+    frec_pasos_par=[]
+    frec_pasos_impar=[]
+    for i in range(len(posiciones_ballet)):
+        frec=posiciones_ballet.count(i+1)
+        frec=frec/len(posiciones_ballet)
+        frec=str(Fraction(frec).limit_denominator())
+        prob_posiciones.append(frec)
+        if pasos[i]=='Relevé':
+            frec_pasos_par.append(1)
+        else:
+            frec_pasos_par.append(None)
+        if pasos[i]=='Retiré':
+            frec_pasos_impar.append(1)
+        else:
+            frec_pasos_impar.append(None)
+    df_prob=pd.DataFrame(prob_posiciones,columns=['Fase 1 Posiciones'])
+    df_par=pd.DataFrame(frec_pasos_par,columns=['Paso 1 Relevé'])
+    df_impar=pd.DataFrame(frec_pasos_impar,columns=['Paso 2 Retiré'])
+    df_subjetiva=pd.concat([df_prob,df_par,df_impar],axis=1)
+    print(df_subjetiva)
 
 
 def run():
@@ -108,7 +131,6 @@ def run():
     table3.place(x=350, y=310,height=90, width=300)
     tk.Button(raiz, text="Grafica de barras", command=lambda:mostrar_grafica(df_salida,frecuencia)).place(x=750,y=350)
 
-
-
+probabilidad_subjetiva(practica_ballet())
 run()
 raiz.mainloop()
