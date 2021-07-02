@@ -85,7 +85,7 @@ def mostrar_grafica(df1,frecuencia):
     grafBarra=plt.bar(df1['Configuraciones'],frecuencia)
     plt.show()
 
-def probabilidad_subjetiva(df_ballet):
+def probabilidad_subjetiva_tabla1(df_ballet):
     pasos=np.array(df_ballet['FASE 2 PASOS'])
     prob_posiciones=[]
     frec_pasos_par=[]
@@ -93,22 +93,55 @@ def probabilidad_subjetiva(df_ballet):
     for i in range(len(posiciones_ballet)):
         frec=posiciones_ballet.count(i+1)
         frec=frec/len(posiciones_ballet)
-        frec=str(Fraction(frec).limit_denominator())
+        frec=Fraction(frec).limit_denominator()
         prob_posiciones.append(frec)
         if pasos[i]=='Relevé':
             frec_pasos_par.append(1)
         else:
-            frec_pasos_par.append(None)
+            frec_pasos_par.append(0)
         if pasos[i]=='Retiré':
             frec_pasos_impar.append(1)
         else:
-            frec_pasos_impar.append(None)
+            frec_pasos_impar.append(0)
+        
     df_prob=pd.DataFrame(prob_posiciones,columns=['Fase 1 Posiciones'])
     df_par=pd.DataFrame(frec_pasos_par,columns=['Paso 1 Relevé'])
     df_impar=pd.DataFrame(frec_pasos_impar,columns=['Paso 2 Retiré'])
-    df_subjetiva=pd.concat([df_prob,df_par,df_impar],axis=1)
-    print(df_subjetiva)
+    df_subjetiva1=pd.concat([df_prob,df_par,df_impar],axis=1)
+    suma=sum(prob_posiciones)
+    prob_posiciones.append(suma)
+    return df_subjetiva1,prob_posiciones
 
+def probabilidad_subjetiva_tabla2(prob_pos, df_ballet):
+    pasos=np.array(df_ballet['FASE 2 PASOS'])
+    pasos_fraccion_par=[]
+    pasos_fraccion_impar=[]
+    cont_par=0
+    cont_impar=0
+    for i in range(len(pasos)):
+        if pasos[i]=='Relevé':
+            cont_par=1
+            pasos_fraccion_par.append(Fraction(cont_par/len(pasos)).limit_denominator())
+            cont_par=0
+        else:
+            pasos_fraccion_par.append(0)
+        if pasos[i]=='Retiré':
+            cont_impar=1
+            pasos_fraccion_impar.append(Fraction(cont_impar/len(pasos)).limit_denominator())
+            cont_impar=0
+        else:
+            pasos_fraccion_impar.append(0)
+    suma_par=sum(pasos_fraccion_par)
+    pasos_fraccion_par.append(suma_par)
+    sum_impar=sum(pasos_fraccion_impar)
+    pasos_fraccion_impar.append(sum_impar)
+    df1= pd.DataFrame(prob_pos,columns=['Fase 1 Posciones'])
+    df2=pd.DataFrame(pasos_fraccion_par,columns=['Fase 2 Paso 1 Relevé'])
+    df3=pd.DataFrame(pasos_fraccion_impar,columns=['Fase 2 Paso 2 Retiré'])
+    df_subjetiva2=pd.concat([df1,df2,df3],axis=1)
+    return df_subjetiva2
+
+df_subjetivo1, array=probabilidad_subjetiva_tabla1(practica_ballet())
 
 def run():
     df_salida,frecuencia=probabilidad_clasica(practica_ballet())
@@ -130,7 +163,14 @@ def run():
     table3.insert(INSERT,df_salida.to_string())
     table3.place(x=350, y=310,height=90, width=300)
     tk.Button(raiz, text="Grafica de barras", command=lambda:mostrar_grafica(df_salida,frecuencia)).place(x=750,y=350)
+    label5=tk.Label(raiz,text='Probabilidad Subjetiva',font=(50))
+    label5.place(x=50,y=450)
+    table4 = Text(raiz)
+    table4.insert(INSERT,df_subjetivo1.to_string())
+    table4.place(x=20, y=500,height=100, width=450)
+    table5 = Text(raiz)
+    table5.insert(INSERT,probabilidad_subjetiva_tabla2(array, practica_ballet()).to_string())
+    table5.place(x=500, y=500,height=120, width=500)
 
-probabilidad_subjetiva(practica_ballet())
 run()
 raiz.mainloop()
