@@ -14,7 +14,7 @@ global pasos_ballet
 global bailarinas
 global equipo_ballet
 posiciones_ballet=[1,2,3,4,5]
-pasos_ballet=['Relevé','Retiré']
+pasos_ballet=['Retiré','Relevé']
 bailarinas= [1,2,3,4,5,6,7,8,9,10]
 equipo_ballet=[]
 
@@ -66,13 +66,12 @@ def probabilidad_clasica(df_ballet):
             cont_rel=cont_rel+1
     prob_ret=Fraction(cont_ret/len(pasos)).limit_denominator()
     prob_rel=Fraction(cont_rel/len(pasos)).limit_denominator()
-    frecuencia=[cont_rel,cont_ret]
-    prob_pasos=[prob_rel,prob_ret]
-    conf=['P(Relevé)','P(Retiré)']
+    prob_pasos=[prob_ret,prob_rel]
+    conf=['P(Retiré)','P(Relevé)']
     df1=pd.DataFrame(conf,columns=['Configuraciones'])
     df2= pd.DataFrame(prob_pasos, columns=['Probabilidad'])
     df_salidas=pd.concat([df1,df2],axis=1)
-    return df_salidas, frecuencia
+    return df_salidas
 
 def probabilidad_subjetiva_tabla1(df_ballet):
     pasos=np.array(df_ballet['FASE 2 PASOS'])
@@ -85,17 +84,17 @@ def probabilidad_subjetiva_tabla1(df_ballet):
         frec=Fraction(frec).limit_denominator()
         prob_posiciones.append(frec)
         if pasos[i]=='Relevé':
-            frec_pasos_par.append(1)
-        else:
-            frec_pasos_par.append(0)
-        if pasos[i]=='Retiré':
             frec_pasos_impar.append(1)
         else:
             frec_pasos_impar.append(0)
+        if pasos[i]=='Retiré':
+            frec_pasos_par.append(1)
+        else:
+            frec_pasos_par.append(0)
         
     df_prob=pd.DataFrame(prob_posiciones,columns=['Fase 1 Posiciones'])
-    df_par=pd.DataFrame(frec_pasos_par,columns=['Paso 1 Relevé'])
-    df_impar=pd.DataFrame(frec_pasos_impar,columns=['Paso 2 Retiré'])
+    df_par=pd.DataFrame(frec_pasos_par,columns=['Paso 1 Retiré'])
+    df_impar=pd.DataFrame(frec_pasos_impar,columns=['Paso 2 Relevé'])
     df_subjetiva1=pd.concat([df_prob,df_par,df_impar],axis=1)
     suma=sum(prob_posiciones)
     prob_posiciones.append(suma)
@@ -110,19 +109,19 @@ def probabilidad_subjetiva_tabla2(prob_pos, df_ballet):
     cont_impar=0
     for i in range(len(pasos)):
         if pasos[i]=='Relevé':
-            cont_par=1
-            pasos_fraccion_par.append(Fraction(cont_par/len(pasos)).limit_denominator())
-            prob_salida.append(pasos_fraccion_par[i]*prob_pos[i])
-            cont_par=0
-        else:
-            pasos_fraccion_par.append(0)
-        if pasos[i]=='Retiré':
             cont_impar=1
             pasos_fraccion_impar.append(Fraction(cont_impar/len(pasos)).limit_denominator())
             prob_salida.append(pasos_fraccion_impar[i]*prob_pos[i])
             cont_impar=0
         else:
             pasos_fraccion_impar.append(0)
+        if pasos[i]=='Retiré':
+            cont_par=1
+            pasos_fraccion_par.append(Fraction(cont_par/len(pasos)).limit_denominator())
+            prob_salida.append(pasos_fraccion_par[i]*prob_pos[i])
+            cont_par=0
+        else:
+            pasos_fraccion_par.append(0)
     suma_salida=sum(prob_salida)
     prob_salida.append(suma_salida)
     suma_par=sum(pasos_fraccion_par)
@@ -130,8 +129,8 @@ def probabilidad_subjetiva_tabla2(prob_pos, df_ballet):
     sum_impar=sum(pasos_fraccion_impar)
     pasos_fraccion_impar.append(sum_impar)
     df1= pd.DataFrame(prob_pos,columns=['Fase 1 Posciones'])
-    df2=pd.DataFrame(pasos_fraccion_par,columns=['Fase 2 Paso 1 Relevé'])
-    df3=pd.DataFrame(pasos_fraccion_impar,columns=['Fase 2 Paso 2 Retiré'])
+    df2=pd.DataFrame(pasos_fraccion_par,columns=['Fase 2 Paso 1 Retiré'])
+    df3=pd.DataFrame(pasos_fraccion_impar,columns=['Fase 2 Paso 2 Relevé'])
     df4=pd.DataFrame(prob_salida,columns=['Probabilidad de salida'])
     df_subjetiva2=pd.concat([df1,df2,df3,df4],axis=1)
     return df_subjetiva2
@@ -192,18 +191,18 @@ def resultados_simulacion(cont_pos):
     for i in range(len(cont_pos)):
         if cont_pos[i]%2==0:
             frec_pos_par=frec_pos_par+1
-            frec_paso_releve=frec_paso_releve+1
+            frec_paso_retire=frec_paso_retire+1
         else:
             frec_pos_impar=frec_pos_impar+1
-            frec_paso_retire=frec_paso_retire+1
+            frec_paso_releve=frec_paso_retire+1
     frecuencia_total_pos=[frec_pos_par,frec_pos_impar]
     grafica_posicion=plt.bar(['par','impar'],frecuencia_total_pos)
     plt.title('Posiciones de ballet')
     plt.xlabel('Configuraciones')
     plt.ylabel('Frecuencia')
     plt.show()
-    frecuencia_total_pasos=[frec_paso_releve,frec_paso_retire]
-    grafica_pasos=plt.bar(['Relevé','Retiré'],frecuencia_total_pasos)
+    frecuencia_total_pasos=[frec_paso_retire,frec_paso_releve]
+    grafica_pasos=plt.bar(['Retiré','Relevé'],frecuencia_total_pasos)
     plt.title('Pasos de ballet')
     plt.xlabel('Configuraciones')
     plt.ylabel('Frecuencia')
@@ -223,7 +222,7 @@ raiz.geometry('1300x680')
 raiz.pack_propagate(False)
 raiz.config(bg='white',width=1300,height=680)
 def run():
-    df_salida,frecuencia=probabilidad_clasica(tabla_fases())
+    df_salida=probabilidad_clasica(tabla_fases())
     label1=tk.Label(raiz,text='Proyecto probabilidad: Bailarinas de ballet',font=(200))
     label1.place(x=500,y=40)
     label2=tk.Label(raiz,text=permutaciones,font=(200))
