@@ -2,7 +2,6 @@ from itertools import permutations
 import random
 import matplotlib.pyplot as plt
 import numpy as np
-from numpy.lib.function_base import append
 import pandas as pd
 import tkinter as tk
 from tkinter import Text
