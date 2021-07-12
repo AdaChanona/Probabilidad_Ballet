@@ -21,26 +21,12 @@ def permutaciones_bailarinas():
     equipo= permutations(bailarinas,2)
     for i in list(equipo):
         equipo_ballet.append(i)
-    per='permutaciones= '+ str(len(equipo_ballet))
+    per=len(equipo_ballet)
     return per
 
-def equipo_bailarinas():
-    num_equipo=[]
-    for i in range(len(posiciones_ballet)):
-        num_equipo.append(random.choice(equipo_ballet)) 
-    return num_equipo
-
-def dataframe_equipos_seleccionados():
-    num_equipo= equipo_bailarinas()
-    rango=int(len(bailarinas)/2)
-    cont=1
-    df = pd.DataFrame(columns=['Numero de equipo','Integrantes', 'bailarina principal', 'bailarina secundaria'],
-                  index=range(rango))
-    for i in range(rango):
-        equipo=num_equipo[i]
-        df.iloc[i]=(cont,num_equipo[i],equipo[0],equipo[1])
-        cont=cont+1
-    return df
+def equipo_bailarinas(per):
+    conf=per*len(posiciones_ballet)
+    return conf
 
 def tabla_fases():
     pasos=[]
@@ -54,7 +40,7 @@ def tabla_fases():
     df_ballet=pd.concat([df_pos,df_pasos],axis=1)
     return df_ballet
         
-def probabilidad_clasica(df_ballet):
+def probabilidad_clasica(df_ballet,conf):
     pasos=np.array(df_ballet['FASE 2 PASOS'])
     cont_ret=0
     cont_rel=0
@@ -63,23 +49,23 @@ def probabilidad_clasica(df_ballet):
             cont_ret=cont_ret+1
         else:
             cont_rel=cont_rel+1
-    prob_ret=Fraction(cont_ret/len(pasos)).limit_denominator()
-    prob_rel=Fraction(cont_rel/len(pasos)).limit_denominator()
+    prob_ret=Fraction(cont_ret/conf).limit_denominator()
+    prob_rel=Fraction(cont_rel/conf).limit_denominator()
     prob_pasos=[prob_ret,prob_rel]
     conf=['P(Retiré)','P(Relevé)']
-    df1=pd.DataFrame(conf,columns=['Configuraciones'])
+    df1=pd.DataFrame(conf,columns=['Salidas'])
     df2= pd.DataFrame(prob_pasos, columns=['Probabilidad'])
     df_salidas=pd.concat([df1,df2],axis=1)
     return df_salidas
 
-def probabilidad_subjetiva_tabla1(df_ballet):
+def probabilidad_subjetiva_tabla1(df_ballet,conf):
     pasos=np.array(df_ballet['FASE 2 PASOS'])
     prob_posiciones=[]
     frec_pasos_par=[]
     frec_pasos_impar=[]
     for i in range(len(posiciones_ballet)):
         frec=posiciones_ballet.count(i+1)
-        frec=frec/len(posiciones_ballet)
+        frec=frec/conf
         frec=Fraction(frec).limit_denominator()
         prob_posiciones.append(frec)
         if pasos[i]=='Relevé':
@@ -99,7 +85,7 @@ def probabilidad_subjetiva_tabla1(df_ballet):
     prob_posiciones.append(suma)
     return df_subjetiva1,prob_posiciones
 
-def probabilidad_subjetiva_tabla2(prob_pos, df_ballet):
+def probabilidad_subjetiva_tabla2(prob_pos, df_ballet,conf):
     pasos=np.array(df_ballet['FASE 2 PASOS'])
     pasos_fraccion_par=[]
     pasos_fraccion_impar=[]
@@ -109,14 +95,14 @@ def probabilidad_subjetiva_tabla2(prob_pos, df_ballet):
     for i in range(len(pasos)):
         if pasos[i]=='Relevé':
             cont_impar=1
-            pasos_fraccion_impar.append(Fraction(cont_impar/len(pasos)).limit_denominator())
+            pasos_fraccion_impar.append(Fraction(cont_impar/conf).limit_denominator())
             prob_salida.append(pasos_fraccion_impar[i]*prob_pos[i])
             cont_impar=0
         else:
             pasos_fraccion_impar.append(0)
         if pasos[i]=='Retiré':
             cont_par=1
-            pasos_fraccion_par.append(Fraction(cont_par/len(pasos)).limit_denominator())
+            pasos_fraccion_par.append(Fraction(cont_par/conf).limit_denominator())
             prob_salida.append(pasos_fraccion_par[i]*prob_pos[i])
             cont_par=0
         else:
@@ -134,7 +120,7 @@ def probabilidad_subjetiva_tabla2(prob_pos, df_ballet):
     df_subjetiva2=pd.concat([df1,df2,df3,df4],axis=1)
     return df_subjetiva2
 
-def conf_parametro():
+def config_parametro():
     op=0
     while op<3:
         print('Escoja una opción')
@@ -153,8 +139,7 @@ def conf_parametro():
             posiciones_ballet.remove(pos_delete)
             print('Se eliminó la posición ',posiciones_ballet)
 
-def empirico(equipo):
-    num_equipo=np.array(equipo['Numero de equipo'])
+def empirico():
     cont_pos=[]
     op=0
     while op==1 or op==2 or op==0:
@@ -165,13 +150,11 @@ def empirico(equipo):
         print('3. Imprimir resultados')
         op=int(input())
         if(op==1):
-            conf_parametro()
+            config_parametro()
         if(op==2):
             repeticion=int(input('¿Cuantas veces quiere repetir la simulación? '))
             for i in range(repeticion):
                 print('-----------------------------------------------------')
-                print('Escogiendo equipo...')
-                print('Te toco el equipo: ',random.choice(num_equipo))
                 print('La posición se escogerá aleatoriamente')
                 pos=random.choice(posiciones_ballet)
                 cont_pos.append(pos)
@@ -197,22 +180,21 @@ def resultados_simulacion(cont_pos):
     frecuencia_total_pos=[frec_pos_par,frec_pos_impar]
     grafica_posicion=plt.bar(['par','impar'],frecuencia_total_pos)
     plt.title('Posiciones de ballet')
-    plt.xlabel('Configuraciones')
+    plt.xlabel('Salidas')
     plt.ylabel('Frecuencia')
     plt.show()
     frecuencia_total_pasos=[frec_paso_retire,frec_paso_releve]
     grafica_pasos=plt.bar(['Retiré','Relevé'],frecuencia_total_pasos)
     plt.title('Pasos de ballet')
-    plt.xlabel('Configuraciones')
+    plt.xlabel('Salidas')
     plt.ylabel('Frecuencia')
     plt.show()
 
 
-permutaciones=permutaciones_bailarinas()
-equipo=equipo_bailarinas()
-equipo_select=dataframe_equipos_seleccionados()
-cont_pos=empirico(equipo_select)
-df_subjetivo1, array=probabilidad_subjetiva_tabla1(tabla_fases())
+per=permutaciones_bailarinas()
+cont_pos=empirico()
+conf=equipo_bailarinas(per)
+df_subjetivo1, array=probabilidad_subjetiva_tabla1(tabla_fases(),conf)
 
 #tkinter
 raiz=tk.Tk()
@@ -221,19 +203,16 @@ raiz.geometry('1300x680')
 raiz.pack_propagate(False)
 raiz.config(bg='white',width=1300,height=680)
 def run():
-    df_salida=probabilidad_clasica(tabla_fases())
+    df_salida=probabilidad_clasica(tabla_fases(),conf)
     label1=tk.Label(raiz,text='Proyecto probabilidad: Bailarinas de ballet',font=(200))
-    label1.place(x=500,y=40)
-    label2=tk.Label(raiz,text=permutaciones,font=(200))
-    label2.place(x=900,y=180)
-    label3=tk.Label(raiz,text='Equipos seleccionados',font=(50))
-    label3.place(x=50,y=100)
-    table1 = Text(raiz)
-    table1.insert(INSERT,equipo_select.to_string())
-    table1.place(x=20, y=140,height=150, width=600)
-    table2 = Text(raiz)
+    label1.place(x=450,y=40)
+    label2=tk.Label(raiz,text='Permutaciones: '+str(per),font=(50))
+    label2.place(x=50,y=150)
+    label7=tk.Label(raiz,text='Configuraciones totales: '+str(conf),font=(50))
+    label7.place(x=300,y=150)
     label4=tk.Label(raiz,text='Probabilidad Clásica',font=(50))
     label4.place(x=50,y=270)
+    table2 = Text(raiz)
     table2.insert(INSERT,tabla_fases().to_string())
     table2.place(x=20, y=310,height=150, width=300)
     table3 = Text(raiz)
@@ -245,11 +224,11 @@ def run():
     table4.insert(INSERT,df_subjetivo1.to_string())
     table4.place(x=20, y=500,height=150, width=450)
     table5 = Text(raiz)
-    table5.insert(INSERT,probabilidad_subjetiva_tabla2(array, tabla_fases()).to_string())
+    table5.insert(INSERT,probabilidad_subjetiva_tabla2(array, tabla_fases(),conf).to_string())
     table5.place(x=500, y=500,height=150, width=750)
     label6=tk.Label(raiz,text='Resultados de simulación',font=(200))
-    label6.place(x=880,y=300)
-    tk.Button(raiz, text="Resultado en Graficas", command=lambda:resultados_simulacion(cont_pos)).place(x=930,y=350)
+    label6.place(x=880,y=150)
+    tk.Button(raiz, text="Resultado en Graficas", command=lambda:resultados_simulacion(cont_pos)).place(x=930,y=200)
 
 print('Imprimiendo probabilidades...')
 run()
