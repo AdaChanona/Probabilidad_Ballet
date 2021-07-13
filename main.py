@@ -8,6 +8,8 @@ from tkinter import Text
 from tkinter.constants import INSERT
 from fractions import Fraction
 
+from pandas.core.frame import DataFrame
+
 global posiciones_ballet
 global pasos_ballet
 global bailarinas
@@ -56,6 +58,7 @@ def probabilidad_clasica(df_ballet,conf):
     df1=pd.DataFrame(conf,columns=['Salidas'])
     df2= pd.DataFrame(prob_pasos, columns=['Probabilidad'])
     df_salidas=pd.concat([df1,df2],axis=1)
+    df_salidas.to_csv('./Resultados/Probabilidad_Clasica.csv')
     return df_salidas
 
 def probabilidad_subjetiva_tabla1(df_ballet,conf):
@@ -118,6 +121,7 @@ def probabilidad_subjetiva_tabla2(prob_pos, df_ballet,conf):
     df3=pd.DataFrame(pasos_fraccion_impar,columns=['Fase 2 Paso 2 Relevé'])
     df4=pd.DataFrame(prob_salida,columns=['Probabilidad de salida'])
     df_subjetiva2=pd.concat([df1,df2,df3,df4],axis=1)
+    df_subjetiva2.to_csv('./Resultados/Probabilidad_subjetiva.csv')
     return df_subjetiva2
 
 def config_parametro():
@@ -140,7 +144,10 @@ def config_parametro():
             print('Se eliminó la posición ',posiciones_ballet)
 
 def empirico():
-    cont_pos=[]
+    cont_pos1000=[]
+    cont_pos5000=[]
+    cont_pos10000=[]
+    cont_pos100000=[]
     op=0
     while op==1 or op==2 or op==0:
         print('----------------------------------------------------')
@@ -152,47 +159,92 @@ def empirico():
         if(op==1):
             config_parametro()
         if(op==2):
-            repeticion=int(input('¿Cuantas veces quiere repetir la simulación? '))
-            for i in range(repeticion):
+            for i in range(1000):
                 print('-----------------------------------------------------')
-                print('La posición se escogerá aleatoriamente')
                 pos=random.choice(posiciones_ballet)
-                cont_pos.append(pos)
+                cont_pos1000.append(pos)
                 print('La bailarina principal hará un plié en la posicion: ', pos)
                 if(pos%2==0):
                     print('La bailarina secundaria hará un: ',pasos_ballet[0])
                 else:
                     print('La bailarina secundaria hará un: ',pasos_ballet[-1])
-    return cont_pos
+            for i in range(5000):
+                print('-----------------------------------------------------')
+                pos=random.choice(posiciones_ballet)
+                cont_pos5000.append(pos)
+                print('La bailarina principal hará un plié en la posicion: ', pos)
+                if(pos%2==0):
+                    print('La bailarina secundaria hará un: ',pasos_ballet[0])
+                else:
+                    print('La bailarina secundaria hará un: ',pasos_ballet[-1])
+            for i in range(10000):
+                print('-----------------------------------------------------')
+                pos=random.choice(posiciones_ballet)
+                cont_pos10000.append(pos)
+                print('La bailarina principal hará un plié en la posicion: ', pos)
+                if(pos%2==0):
+                    print('La bailarina secundaria hará un: ',pasos_ballet[0])
+                else:
+                    print('La bailarina secundaria hará un: ',pasos_ballet[-1])
+            for i in range(100000):
+                print('-----------------------------------------------------')
+                pos=random.choice(posiciones_ballet)
+                cont_pos100000.append(pos)
+                print('La bailarina principal hará un plié en la posicion: ', pos)
+                if(pos%2==0):
+                    print('La bailarina secundaria hará un: ',pasos_ballet[0])
+                else:
+                    print('La bailarina secundaria hará un: ',pasos_ballet[-1])
+    return cont_pos1000,cont_pos5000,cont_pos10000,cont_pos100000
 
 def resultados_simulacion(cont_pos):
     frec_pos_par=0
     frec_pos_impar=0
     frec_paso_releve=0
     frec_paso_retire=0
+    prob_salida_paso1=0
+    prob_salida_paso2=0
     for i in range(len(cont_pos)):
         if cont_pos[i]%2==0:
             frec_pos_par=frec_pos_par+1
             frec_paso_retire=frec_paso_retire+1
         else:
             frec_pos_impar=frec_pos_impar+1
-            frec_paso_releve=frec_paso_retire+1
-    frecuencia_total_pos=[frec_pos_par,frec_pos_impar]
-    grafica_posicion=plt.bar(['par','impar'],frecuencia_total_pos)
+            frec_paso_releve=frec_paso_releve+1
+    prob_salida_paso1=Fraction(frec_pos_par/len(cont_pos)).limit_denominator()
+    prob_salida_paso2=Fraction(frec_pos_impar/len(cont_pos)).limit_denominator()
+    array_prob=[prob_salida_paso1,prob_salida_paso2]
+    suma_prob=sum(array_prob)
+    array_prob.append(suma_prob)
+    array_resultados=[frec_paso_retire,frec_paso_releve]
+    suma_result=sum(array_resultados)
+    array_resultados.append(suma_result)
+    index=pd.DataFrame(['Retiré','Relevé','total'],columns=['Salidas'])
+    resultado_salidas=pd.DataFrame(array_resultados,columns=['Frecuencia'])
+    resultado_prob=pd.DataFrame(array_prob,columns=['Probabilidad'])
+    resultado_total=pd.concat([index,resultado_salidas,resultado_prob],axis=1)
+    print (resultado_total)
+    if len(cont_pos)==1000:
+        resultado_total.to_csv('./Resultados/simulacion_1000.csv')
+    elif len(cont_pos)==5000:
+        resultado_total.to_csv('./Resultados/simulacion_5000.csv')
+    elif len(cont_pos)==10000:
+        resultado_total.to_csv('./Resultados/simulacion_10000.csv')
+    else:
+        resultado_total.to_csv('./Resultados/simulacion_100000.csv')
+    grafica_posicion=plt.bar(['par','impar'],[frec_pos_par,frec_pos_impar])
     plt.title('Posiciones de ballet')
     plt.xlabel('Salidas')
     plt.ylabel('Frecuencia')
     plt.show()
-    frecuencia_total_pasos=[frec_paso_retire,frec_paso_releve]
-    grafica_pasos=plt.bar(['Retiré','Relevé'],frecuencia_total_pasos)
+    grafica_pasos=plt.bar(['Retiré','Relevé'],[frec_paso_retire,frec_paso_releve])
     plt.title('Pasos de ballet')
     plt.xlabel('Salidas')
     plt.ylabel('Frecuencia')
     plt.show()
 
-
 per=permutaciones_bailarinas()
-cont_pos=empirico()
+cont_pos1000,cont_pos5000,cont_pos10000,cont_pos100000=empirico()
 conf=equipo_bailarinas(per)
 df_subjetivo1, array=probabilidad_subjetiva_tabla1(tabla_fases(),conf)
 
@@ -228,8 +280,10 @@ def run():
     table5.place(x=500, y=500,height=150, width=750)
     label6=tk.Label(raiz,text='Resultados de simulación',font=(200))
     label6.place(x=880,y=150)
-    tk.Button(raiz, text="Resultado en Graficas", command=lambda:resultados_simulacion(cont_pos)).place(x=930,y=200)
-
+    tk.Button(raiz, text="Resultado de simulacion 1000", command=lambda:resultados_simulacion(cont_pos1000)).place(x=930,y=200)
+    tk.Button(raiz, text="Resultado de simulacion 5000", command=lambda:resultados_simulacion(cont_pos5000)).place(x=930,y=250)
+    tk.Button(raiz, text="Resultado de simulacion 10,000", command=lambda:resultados_simulacion(cont_pos10000)).place(x=930,y=300)
+    tk.Button(raiz, text="Resultado de simulacion 100,000", command=lambda:resultados_simulacion(cont_pos100000)).place(x=930,y=350)
 print('Imprimiendo probabilidades...')
 run()
 raiz.mainloop()
