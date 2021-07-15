@@ -8,8 +8,6 @@ from tkinter import Text
 from tkinter.constants import INSERT
 from fractions import Fraction
 
-from pandas.core.frame import DataFrame
-
 global posiciones_ballet
 global pasos_ballet
 global bailarinas
@@ -116,7 +114,7 @@ def probabilidad_subjetiva_tabla2(prob_pos, df_ballet,conf):
     pasos_fraccion_par.append(suma_par)
     sum_impar=sum(pasos_fraccion_impar)
     pasos_fraccion_impar.append(sum_impar)
-    df1= pd.DataFrame(prob_pos,columns=['Fase 1 Posciones'])
+    df1= pd.DataFrame(prob_pos,columns=['Fase 1 Posiciones'])
     df2=pd.DataFrame(pasos_fraccion_par,columns=['Fase 2 Paso 1 Retiré'])
     df3=pd.DataFrame(pasos_fraccion_impar,columns=['Fase 2 Paso 2 Relevé'])
     df4=pd.DataFrame(prob_salida,columns=['Probabilidad de salida'])
@@ -223,7 +221,6 @@ def resultados_simulacion(cont_pos):
     resultado_salidas=pd.DataFrame(array_resultados,columns=['Frecuencia'])
     resultado_prob=pd.DataFrame(array_prob,columns=['Probabilidad'])
     resultado_total=pd.concat([index,resultado_salidas,resultado_prob],axis=1)
-    print (resultado_total)
     if len(cont_pos)==1000:
         resultado_total.to_csv('./Resultados/simulacion_1000.csv')
     elif len(cont_pos)==5000:
@@ -232,11 +229,6 @@ def resultados_simulacion(cont_pos):
         resultado_total.to_csv('./Resultados/simulacion_10000.csv')
     else:
         resultado_total.to_csv('./Resultados/simulacion_100000.csv')
-    grafica_posicion=plt.bar(['par','impar'],[frec_pos_par,frec_pos_impar])
-    plt.title('Posiciones de ballet')
-    plt.xlabel('Salidas')
-    plt.ylabel('Frecuencia')
-    plt.show()
     grafica_pasos=plt.bar(['Retiré','Relevé'],[frec_paso_retire,frec_paso_releve])
     plt.title('Pasos de ballet')
     plt.xlabel('Salidas')
